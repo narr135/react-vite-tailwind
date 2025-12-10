@@ -2,7 +2,6 @@ import { ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { ShoppingCartContext } from "../../Context";
 import { NavItem } from "../NavItem";
 import { useContext, useState } from "react";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
@@ -55,7 +54,7 @@ const Navbar = () => {
         ))}
       </ul>
       <ul className="flex items-center gap-3">
-        <li className="text-black/60">{account?.email}</li>
+        <li className="text-black/60">{account?.email || ''}</li>
         {isSignIn && secondMenu.map((menuItem, index) => {
           let newIndex = index + firstMenu.length;
 
@@ -72,17 +71,8 @@ const Navbar = () => {
         })}
         <li className="cursor-pointer">
           {!isSignIn 
-            ? <Link 
-                to="/sign-in"
-              >
-                Sign in
-              </Link> 
-            : <Link 
-                to="/sign-in" 
-                onClick={() => signOut()}
-              >
-                Sign out
-              </Link>
+            ? <Link to="/sign-in">Sign in</Link> 
+            : <Link to="/sign-in" onClick={() => signOut()}>Sign out</Link>
           }
         </li>
         <li className="flex items-center">

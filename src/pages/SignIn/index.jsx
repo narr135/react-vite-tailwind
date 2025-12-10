@@ -5,68 +5,123 @@ import { Link } from "react-router-dom";
 function SignIn() {
   const {
     account,
-    signIn
+    signIn,
+    signOut,
+    isSignIn
   } = useContext(ShoppingCartContext);
   const [view, setView] = useState("login");
   const form = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const hasUserAnAccount = Object.keys(account).length !== 0;
+  const hasUserAnAccount = Object.keys(account || {}).length !== 0;
 
-  const createAnAccount = () => {
-    const formData = new FormData(form.current);
-    const data = {
-      name: formData.get("name"),
-      email: formData.get("email"),
-      password: formData.get("password")
+  const createAnAccount = async (e) => {
+    e?.preventDefault?.();
+    setError(null);
+    setLoading(true);
+    try {
+      const formData = new FormData(form.current);
+      const data = {
+        name: formData.get("name"),
+        email: formData.get("email"),
+        password: formData.get("password")
+      };
+
+      await signIn(data); // registers and stores token/account
+      // after success, navigate home (Link wrapper does it)
+    } catch (err) {
+      // show server error message if available
+      const msg = err?.response?.data?.message || err?.response?.data || err.message || 'Failed to register';
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    signIn(data);
-  }
+  const doLogin = async (e) => {
+    e?.preventDefault?.();
+    setError(null);
+    setLoading(true);
+    try {
+      const formData = new FormData(form.current || undefined);
+      const data = {
+        email: formData ? formData.get("email") : account?.email,
+        password: formData ? formData.get("password") : account?.password
+      };
+
+      if (!data.email || !data.password) {
+        setError('Please provide email and password');
+        setLoading(false);
+        return;
+      }
+
+      await signIn(data); // login
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data || err.message || 'Login failed';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderLogin = () => {
     return (
-      <div className="flex flex-col w-80">
-        <p>
-          <span className="font-light text-sm">Email:</span>
-          <span>{account?.email}</span>
-        </p>
-        <p>
-          <span className="font-light text-sm">Password:</span>
-          <span>{account?.password}</span>
-        </p>
-        <Link to="/">
+      <form ref={form} className="flex flex-col w-80" onSubmit={doLogin}>
+        {error && <div className="text-red-600 text-sm mb-2">{String(error)}</div>}
+        <div className="flex flex-col gap-1">
+          <label htmlFor="email" className="font-light text-sm">Email:</label>
+          <input
+            type="text"
+            id="email"
+            name="email"
+            defaultValue={account?.email}
+            placeholder="hi@helloworld.com"
+            className="rounded-lg border border-black placeholder:font-light placeholder:text-sm placeholder:text-black/60 focus:outline-none py-2 px-4"
+          />
+        </div>
+        <div className="flex flex-col gap-1 mt-2">
+          <label htmlFor="password" className="font-light text-sm">Password:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            defaultValue={account?.password}
+            placeholder="******"
+            className="rounded-lg border border-black placeholder:font-light placeholder:text-sm placeholder:text-black/60 focus:outline-none py-2 px-4"
+          />
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <button
+            type="submit"
+            className="bg-black text-white w-full rounded-lg py-3"
+            disabled={loading}
+          >
+            {loading ? 'Logging...' : 'Log in'}
+          </button>
           <button
             type="button"
-            className="bg-black disabled:bg-black/40 text-white w-full rounded-lg py-3 mt-4 mb-2"
-            disabled={!hasUserAnAccount}
-            onClick={() => signIn()}
+            className="border border-black rounded-lg py-3 px-4"
+            onClick={() => {
+              form.current?.reset?.();
+              setView('create-user-info');
+            }}
+            disabled={loading}
           >
-            Log in
+            Create
           </button>
-        </Link>
-        <div className="text-center">
-          <a className="font-light text-x5 underline-offset-4" href="/">
-            Forgot my password
-          </a>
         </div>
-        <button
-          className="border border-black disabled:text-black/40 disabled:border-black/40 rounded-lg mt-6 py-3"
-          disabled={hasUserAnAccount}
-          onClick={() => setView("create-user-info")}
-        >
-          Sign in
-        </button>
-      </div>
+      </form>
     )
   }
 
   const renderCreateUserInfo = () => {
     return (
-      <form ref={form} className="flex flex-col gap-4 w-80">
+      <form ref={form} className="flex flex-col gap-4 w-80" onSubmit={createAnAccount}>
+        {error && <div className="text-red-600 text-sm mb-2">{String(error)}</div>}
         <div className="flex flex-col gap-1">
-          <label htmlFor="name" className="font-light text-sm">
-            Your name:
-          </label>
+          <label htmlFor="name" className="font-light text-sm">Your name:</label>
           <input
             type="text"
             id="name"
@@ -77,9 +132,7 @@ function SignIn() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="email" className="font-light text-sm">
-            Your email:
-          </label>
+          <label htmlFor="email" className="font-light text-sm">Your email:</label>
           <input
             type="text"
             id="email"
@@ -90,11 +143,9 @@ function SignIn() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="password" className="font-light text-sm">
-            Your password:
-          </label>
+          <label htmlFor="password" className="font-light text-sm">Your password:</label>
           <input
-            type="text"
+            type="password"
             id="password"
             name="password"
             defaultValue={account?.password}
@@ -102,17 +153,28 @@ function SignIn() {
             className="rounded-lg border border-black placeholder:font-light placeholder:text-sm placeholder:text-black/60 focus:outline-none py-2 px-4"
           />
         </div>
-        <Link to="/">
+        <div className="flex gap-2">
+          <Link to="/">
+            <button
+              className="bg-black text-white w-full rounded-lg py-3"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? 'Creating...' : 'Create'}
+            </button>
+          </Link>
           <button
-            className="bg-black text-white w-full rounded-lg py-3"
-            onClick={() => createAnAccount()}
+            type="button"
+            className="border border-black rounded-lg py-3 px-4"
+            onClick={() => setView('login')}
+            disabled={loading}
           >
-            Create
+            Back
           </button>
-        </Link>
+        </div>
       </form>
     );
-  }
+  };
 
   const renderView = () => view === "create-user-info" ? renderCreateUserInfo() : renderLogin();
 

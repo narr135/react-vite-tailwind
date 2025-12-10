@@ -29,7 +29,7 @@ function Home() {
       />
       <div className="grid gap-4 grid-cols-4 w-full max-w-screen-lg">
         {filteredItems?.map((item) => (
-          <Card key={item.id} data={item} />
+          <Card key={item.id || item._id} data={item} />
         ))}
         {filteredItems.length === 0 && <p>No products</p>}
       </div>

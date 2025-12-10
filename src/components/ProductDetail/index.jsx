@@ -9,19 +9,23 @@ const ProductDetail = () => {
     productDetail
   } = useContext(ShoppingCartContext);
 
+  const img = productDetail?.image || productDetail?.imageUrl || '';
+
   return (
     <Aside isOpen={isProductDetailOpen} title="Detail" onClose={() => closeProductDetail()}>
       <figure>
         <img
           className="w-full h-hull rounded-lg"
-          src={productDetail.image}
-          alt={productDetail.title}
+          src={img}
+          alt={productDetail?.title}
         />
       </figure>
       <p className='flex flex-col'>
-        <span className="font-medium text-2xl mb-2">{productDetail.price}</span>
-        <span className="font-medium text-md">{productDetail.title}</span>
-        <span className='font-light text-sm'>{productDetail.description}</span>
+        <span className="font-medium text-2xl mb-2">
+          ${productDetail?.price ?? ''}
+        </span>
+        <span className="font-medium text-md">{productDetail?.title}</span>
+        <span className='font-light text-sm'>{productDetail?.description}</span>
       </p>
     </Aside>
   );
